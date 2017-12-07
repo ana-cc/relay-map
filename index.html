@@ -3,14 +3,14 @@
   <head>
   <link rel="stylesheet" href="css/leaflet.css"/>
   <link rel="stylesheet" href="https://metrics.torproject.org/css/bootstrap.min.css"/>
-  <link rel="stylesheet" href="https://metrics.torproject.org/css/font-awesome.min.css"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
   <link rel="stylesheet" href="https://metrics.torproject.org/fonts/source-sans-pro.css" crossorigin="">
   <link rel="stylesheet" href="https://metrics.torproject.org/css/prism.css"/>
   <link rel="stylesheet" href="https://metrics.torproject.org/css/style.css"/>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <script src="js/leaflet.js"></script>
   <link rel="stylesheet" href="css/MarkerCluster.css"/>
-  <link rel="stylesheet" href="css/MarkerCluster.Default.css"/>
+  <link rel="stylesheet" href="css/MarkerCluster.map.css"/>
   <script src="js/leaflet.markercluster.js"></script>
   <script src="js/leaflet.markercluster-src.js"></script>
   <link rel="stylesheet" href="css/easy-button.css">
@@ -25,10 +25,9 @@
       </div></div>
         <input title="Custom query text, e.g 'as=3' or 'search=freeBogatov'"  id="qsrc" >
 	<label title="Custom query" class="btn btn-primary" onclick="markers('custom')">Custom Query</label>
-
-	<label class="btn btn-danger" title="Clear custom query" onclick="clear_custom()">x</label>
+	<label class="btn btn-danger" title="Clear custom query" onclick="clear_custom()"><i class="fa fa-times"></i></label>
 	<p id="info"></p>
-   <div id="unimap" style="border:1px solid #a8a8a8;"></div>    
+   <div id="unimap" style="border:2px solid #a8a8a8; border-radius: 3px;" ></div>    
    </div>                                                  
 		                                                        
 
@@ -43,7 +42,14 @@
     $("#unimap").height($(window).height());
 
    $.each(FLAGS.concat(['custom']), function(i, d) {
-	   window["l_"+d] = new L.MarkerClusterGroup({"chunkedLoading": true});
+	   window["l_"+d] = new L.MarkerClusterGroup({
+		   chunkedLoading: true,
+        	iconCreateFunction: function(cluster) {
+			return L.divIcon({ iconSize: [40, 40], className: d, html: '<div class="inner-div">' + cluster.getChildCount() + '</div>' });
+		}
+	  
+	  
+	   });
 	   window["m_"+d] = new L.Icon({
               iconUrl: "flags/" + d +".png", 
 	      iconSize: [25, 30]  
@@ -65,7 +71,7 @@
 	     }).addTo(mymap);        
 
 
-  L.easyButton('fa-crosshairs fa-lg', function(btn, map){
+L.easyButton('<i class="fa fa-undo"></i>', function(btn, map){
 	     map.setView([+20,0], 2.5);
              }).addTo(mymap);
 
@@ -86,7 +92,7 @@
        window[myLayer].clearLayers();
        }
      else {     
-       var query = "https://onionoo.torproject.org/details?flag=" + f + "&fields=nickname,cw,latitude,longitude";
+       var query = "https://onionoo.torproject.org/details?flag=" + f + "&fields=nickname,consensus_weight,latitude,longitude,observed_bandwidth,platform";
      }
          if (mymap.hasLayer(window[myLayer])) {
            mymap.removeLayer(window[myLayer]);
@@ -99,10 +105,16 @@
              document.getElementById('info').innerHTML += "The query returned "+ data.relays.length + " relays"		   
              $.each(data.relays, function(d, e) {
                if(e["latitude"] != null) {
-               window[myLayer].addLayers(L.marker([e["latitude"], e["longitude"]], {icon: window[myIcon]})) //.addTo(window[myLayer]);
+		var marker = L.marker([e["latitude"], e["longitude"]], {icon: window[myIcon]});
+		marker.bindPopup(
+			"<b>Nickname:</b> " +e["nickname"] 
+			+"<br><b>Consensus weight:</b> " + (1/e["consensus_weight"]).toFixed(4)
+			+"<br/><b>Platform:</b> " + e["platform"] 
+			+"<br/><b>Observed BW:</b> " + (e["observed_bandwidth"]/(1024*8)).toFixed(2) +" Kb/s" 
+			)	
+               window[myLayer].addLayers(marker)
                mymap.addLayer(window[myLayer]);
 		      }
-	       else { console.log(e["nickname"]); }
                     });
 	       })
 	 .fail(function() {

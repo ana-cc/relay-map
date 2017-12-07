@@ -1,0 +1,30 @@
+.guard, .authority, .exit, .custom {
+	line-height: 30px;
+	border-radius: 20px;
+	
+	}
+.inner-div {
+	border-radius: 15px;
+	width: 30px;
+	height: 30px;
+	margin-top:5px;
+	margin-left:5px;
+	text-align: center;
+	line-height: 30px;
+	background-color: rgba(255, 255, 255, 0.6);
+		}
+
+.guard {
+	background-color: rgba(125, 70, 152, 0.8);
+}
+
+.authority {
+	background-color: rgba(72, 72, 72, 0.8);
+}
+.exit {
+	background-color: rgba(104, 176, 48, 0.8);
+}
+.custom {
+	background-color: rgba(255, 0, 0, 0.8);
+}
+
