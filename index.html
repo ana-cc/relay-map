@@ -1,133 +1,134 @@
 <!DOCTYPE html>
 <html>
-  <head>
-  <link rel="stylesheet" href="css/leaflet.css"/>
-  <link rel="stylesheet" href="https://metrics.torproject.org/css/bootstrap.min.css"/>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
-  <link rel="stylesheet" href="https://metrics.torproject.org/fonts/source-sans-pro.css" crossorigin="">
-  <link rel="stylesheet" href="https://metrics.torproject.org/css/prism.css"/>
-  <link rel="stylesheet" href="https://metrics.torproject.org/css/style.css"/>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="js/leaflet.js"></script>
-  <link rel="stylesheet" href="css/MarkerCluster.css"/>
-  <link rel="stylesheet" href="css/MarkerCluster.map.css"/>
-  <script src="js/leaflet.markercluster.js"></script>
-  <script src="js/leaflet.markercluster-src.js"></script>
-  <link rel="stylesheet" href="css/easy-button.css">
-  <script src="js/easy-button.js"></script>
-  </head>
-  <body> 
-  <div id="content" class="container-fluid" >
-      <div class="row"><div class="col-md-6"> 	      
-	  <h3>Choose type of view:</h3>	
-          <div id="controls" style ="padding-bottom:10px"></div>
-	    
-      </div></div>
-        <input title="Custom query text, e.g 'as=3' or 'search=freeBogatov'"  id="qsrc" >
-	<label title="Custom query" class="btn btn-primary" onclick="markers('custom')">Custom Query</label>
-	<label class="btn btn-danger" title="Clear custom query" onclick="clear_custom()"><i class="fa fa-times"></i></label>
-	<p id="info"></p>
-   <div id="unimap" style="border:2px solid #a8a8a8; border-radius: 3px;" ></div>    
-   </div>                                                  
-		                                                        
+   <head>
+      <link rel="stylesheet" href="css/leaflet.css"/>
+      <link rel="stylesheet" href="https://metrics.torproject.org/css/bootstrap.min.css"/>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
+      <link rel="stylesheet" href="https://metrics.torproject.org/fonts/source-sans-pro.css" crossorigin="">
+      <link rel="stylesheet" href="https://metrics.torproject.org/css/prism.css"/>
+      <link rel="stylesheet" href="https://metrics.torproject.org/css/style.css"/>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+      <script src="js/leaflet.js"></script>
+      <link rel="stylesheet" href="css/MarkerCluster.css"/>
+      <link rel="stylesheet" href="css/MarkerCluster.map.css"/>
+      <script src="js/leaflet.markercluster.js"></script>
+      <script src="js/leaflet.markercluster-src.js"></script>
+      <link rel="stylesheet" href="css/easy-button.css">
+      <script src="js/easy-button.js"></script>
+   </head>
+   <body>
 
-   <script>
-
-   String.prototype.capitalize = function() {
-    return this.charAt(0).toUpperCase() + this.slice(1);
-   }
-
-   var FLAGS = ['guard', 'exit', 'authority'];
-   
-    $("#unimap").height($(window).height());
-
-   $.each(FLAGS.concat(['custom']), function(i, d) {
-	   window["l_"+d] = new L.MarkerClusterGroup({
-		   chunkedLoading: true,
-        	   iconCreateFunction: function(cluster) {
-		     return L.divIcon({ iconSize: [40, 40], className: d, html: '<div class="inner-div">' + cluster.getChildCount() + '</div>' });
-		}
-	   });
-	   window["m_"+d] = new L.Icon({
-              iconUrl: "flags/" + d +".png", 
-	      iconSize: [25, 30]  
-	   });   
-   });
- 
-
-
-
+   <div id="content" class="container-fluid" >
+      <div class="row">
+         <div class="col-md-6">
+            <h3>Choose type of view:</h3>
+            <div id="controls" style ="padding-bottom:10px"></div>
+         </div>
+      </div>
+      <input title="Custom query text, e.g 'as=3' or 'search=freeBogatov'"  id="qsrc" >
+      <label title="Custom query" class="btn btn-primary" onclick="markers('custom')">Custom Query</label>
+      <label class="btn btn-danger" title="Clear custom query" onclick="clear_custom()"><i class="fa fa-times"></i></label>
+      <p id="info"></p>
+      <div id="unimap" style="border:2px solid #a8a8a8; border-radius: 3px;" ></div>
+   </div>
+  <script>
+  
+  String.prototype.capitalize = function() {
+      return this.charAt(0).toUpperCase() + this.slice(1);
+  }
+  
+  var FLAGS = ['guard', 'exit', 'authority'];
+  
+  $.each(FLAGS.concat(['custom']), function(i, d) {
+      window["l_" + d] = new L.MarkerClusterGroup({
+          chunkedLoading: true,
+          chunkInterval: 350,
+          iconCreateFunction: function(cluster) {
+              return L.divIcon({
+                  iconSize: [40, 40],
+                  className: d,
+                  html: '<div class="inner-div">' + cluster.getChildCount() + '</div>'
+              });
+          }
+      });
+      window["m_" + d] = new L.Icon({
+          iconUrl: "flags/" + d + ".png",
+          iconSize: [25, 30]
+      });
+  });
+  
+  
+  $("#unimap").height($(window).height());
+  
   var mymap = L.map('unimap', {
-	     center: [+20, 0],
-	     zoomSnap: 0.5,
-	     zoomDelta: 0.5,
-	     zoom: 2.5
-	     });
-
-  L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {  
-	     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-	     }).addTo(mymap);        
-
-
-L.easyButton('<i class="fa fa-undo"></i>', function(btn, map){
-	     map.setView([+20,0], 2.5);
-             }).addTo(mymap);
-
-  var items =[];
+      center: [+20, 0],
+      zoomSnap: 0.5,
+      zoomDelta: 0.5,
+      zoom: 2.5
+  });
+  
+  L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(mymap);
+  
+  L.easyButton('<i class="fa fa-undo"></i>', function(btn, map) {
+      map.setView([+20, 0], 2.5);
+  }).addTo(mymap);
+  
+  var items = [];
   $.each(FLAGS, function(i, d) {
-   items.push("<label class=\"btn btn-default\" style=\"padding: 5px;\" title=\"Show only " + d + " relays\"><input type=\"checkbox\" onclick=\"markers(\'"+ d + "\')\">  "+ d.capitalize() + " relays</label>");
-   });
-   document.getElementById('controls').innerHTML += items.join( "\n" );  
-
-
-   function markers(f) {
-     var myLayer = "l_"+f;
-     var myIcon = "m_"+f;
-     if (f == "custom") {
-       var qsrc = $("#qsrc").val().trim();
-       query="https://onionoo.torproject.org/details?" + qsrc + "&fields=nickname,consensus_weight,platform,observed_bandwidth,latitude,longitude";
-       mymap.removeLayer(window[myLayer]);
-       window[myLayer].clearLayers();
-       }
-     else {     
-       var query = "https://onionoo.torproject.org/details?flag=" + f + "&fields=nickname,consensus_weight,latitude,longitude,observed_bandwidth,platform";
-     }
-         if (mymap.hasLayer(window[myLayer])) {
-           mymap.removeLayer(window[myLayer]);
-           window[myLayer].clearLayers();
-           }  
-         else {
-           $.getJSON( query)
-	.done(function(data) {
-             document.getElementById('info').innerHTML = ""
-             document.getElementById('info').innerHTML += "The query returned "+ data.relays.length + " relays"		   
-	     var markerList = [];
-             $.each(data.relays, function(d, e) {
-               if(e["latitude"] != null) {
-		var marker = L.marker([e["latitude"], e["longitude"]], {icon: window[myIcon]});
-		marker.bindPopup(
-			"<b>Nickname:</b> " +e["nickname"] 
-			+"<br/><b>Platform:</b> " + e["platform"] 
-			+"<br/><b>Observed BW:</b> " + (e["observed_bandwidth"]/(1024*8)).toFixed(2) +" Kb/s" 
-			)
-	       markerList.push(marker);		
-		      }
-                    });
-               window[myLayer].addLayers(markerList);
-               mymap.addLayer(window[myLayer]);
-	       })
-	 .fail(function() {
-             document.getElementById('info').innerHTML = ""
-             document.getElementById('info').innerHTML += "The query failed, please check your syntax."
-	   });
-           }
-         }
-
-   function clear_custom() {
-     mymap.removeLayer(window["l_custom"]);
-     window["l_custom"].clearLayers();
-   }
-   </script>
-  </body>
-</html>  
-
+      items.push("<label class=\"btn btn-default\" style=\"padding: 5px;\" title=\"Show only " + d + " relays\"><input type=\"checkbox\" onclick=\"markers(\'" + d + "\')\">  " + d.capitalize() + " relays</label>");
+  });
+  document.getElementById('controls').innerHTML += items.join("\n");
+  
+  function markers(f) {
+      var myLayer = "l_" + f;
+      var myIcon = "m_" + f;
+      if (f == "custom") {
+          var qsrc = $("#qsrc").val().trim();
+          query = "https://onionoo.torproject.org/details?" + qsrc + "&fields=nickname,platform,observed_bandwidth,latitude,longitude";
+          mymap.removeLayer(window[myLayer]);
+          window[myLayer].clearLayers();
+      } else {
+          var query = "https://onionoo.torproject.org/details?flag=" + f + "&fields=nickname,latitude,longitude,observed_bandwidth,platform";
+      }
+      if (mymap.hasLayer(window[myLayer])) {
+          mymap.removeLayer(window[myLayer]);
+          window[myLayer].clearLayers();
+      } else {
+          $.getJSON(query)
+              .done(function(data) {
+                  document.getElementById('info').innerHTML = ""
+                  document.getElementById('info').innerHTML += "The query returned " + data.relays.length + " relays."
+                  var markerList = [];
+                  $.each(data.relays, function(d, e) {
+                      if (e["latitude"] != null) {
+                          var marker = L.marker([e["latitude"], e["longitude"]], {
+                              icon: window[myIcon]
+                          });
+                          marker.bindPopup(
+                              "<b>Nickname:</b> " + e["nickname"] +
+                              "<br/><b>Platform:</b> " + e["platform"] +
+                              "<br/><b>Observed BW:</b> " + (e["observed_bandwidth"] / (1024 * 8)).toFixed(2) + " Kb/s"
+                          )
+                          markerList.push(marker);
+                      }
+                  });
+                  window[myLayer].addLayers(markerList);
+  
+                  mymap.addLayer(window[myLayer]);
+              })
+              .fail(function() {
+                  document.getElementById('info').innerHTML = ""
+                  document.getElementById('info').innerHTML += "The query failed, please check your syntax."
+              });
+      }
+  }
+  
+  function clear_custom() {
+      mymap.removeLayer(window["l_custom"]);
+      window["l_custom"].clearLayers();
+  }
+  </script>
+ </body>
+</html>
