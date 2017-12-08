@@ -44,11 +44,9 @@
    $.each(FLAGS.concat(['custom']), function(i, d) {
 	   window["l_"+d] = new L.MarkerClusterGroup({
 		   chunkedLoading: true,
-        	iconCreateFunction: function(cluster) {
-			return L.divIcon({ iconSize: [40, 40], className: d, html: '<div class="inner-div">' + cluster.getChildCount() + '</div>' });
+        	   iconCreateFunction: function(cluster) {
+		     return L.divIcon({ iconSize: [40, 40], className: d, html: '<div class="inner-div">' + cluster.getChildCount() + '</div>' });
 		}
-	  
-	  
 	   });
 	   window["m_"+d] = new L.Icon({
               iconUrl: "flags/" + d +".png", 
@@ -87,7 +85,7 @@ L.easyButton('<i class="fa fa-undo"></i>', function(btn, map){
      var myIcon = "m_"+f;
      if (f == "custom") {
        var qsrc = $("#qsrc").val().trim();
-       query="https://onionoo.torproject.org/details?" + qsrc + "&fields=nickname,cw,latitude,longitude";
+       query="https://onionoo.torproject.org/details?" + qsrc + "&fields=nickname,consensus_weight,platform,observed_bandwidth,latitude,longitude";
        mymap.removeLayer(window[myLayer]);
        window[myLayer].clearLayers();
        }
@@ -103,19 +101,20 @@ L.easyButton('<i class="fa fa-undo"></i>', function(btn, map){
 	.done(function(data) {
              document.getElementById('info').innerHTML = ""
              document.getElementById('info').innerHTML += "The query returned "+ data.relays.length + " relays"		   
+	     var markerList = [];
              $.each(data.relays, function(d, e) {
                if(e["latitude"] != null) {
 		var marker = L.marker([e["latitude"], e["longitude"]], {icon: window[myIcon]});
 		marker.bindPopup(
 			"<b>Nickname:</b> " +e["nickname"] 
-			+"<br><b>Consensus weight:</b> " + (1/e["consensus_weight"]).toFixed(4)
 			+"<br/><b>Platform:</b> " + e["platform"] 
 			+"<br/><b>Observed BW:</b> " + (e["observed_bandwidth"]/(1024*8)).toFixed(2) +" Kb/s" 
-			)	
-               window[myLayer].addLayers(marker)
-               mymap.addLayer(window[myLayer]);
+			)
+	       markerList.push(marker);		
 		      }
                     });
+               window[myLayer].addLayers(markerList);
+               mymap.addLayer(window[myLayer]);
 	       })
 	 .fail(function() {
              document.getElementById('info').innerHTML = ""
