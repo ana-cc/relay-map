@@ -26,34 +26,37 @@
          </div>
       </div>
       <input title="Custom query text, e.g 'as=3' or 'search=freeBogatov'"  id="qsrc" >
-      <label title="Custom query" class="btn btn-primary" onclick="markers('custom')">Custom Query</label>
+      <label title="Custom query" class="btn btn-primary" onclick='markers($("#qsrc").val().trim())'>Custom Query</label>
       <label class="btn btn-danger" title="Clear custom query" onclick="clear_custom()"><i class="fa fa-times"></i></label>
       <p id="info"></p>
       <div id="unimap" style="border:2px solid #a8a8a8; border-radius: 3px;" ></div>
    </div>
+
   <script>
   
-  String.prototype.capitalize = function() {
+ String.prototype.capitalize = function() {
       return this.charAt(0).toUpperCase() + this.slice(1);
   }
-  
-  var FLAGS = ['guard', 'exit', 'authority'];
-  
-  $.each(FLAGS.concat(['custom']), function(i, d) {
-      window["l_" + d] = new L.MarkerClusterGroup({
+ var l_custom = new L.MarkerClusterGroup({
           chunkedLoading: true,
           chunkInterval: 350,
           iconCreateFunction: function(cluster) {
               return L.divIcon({
                   iconSize: [40, 40],
-                  className: d,
+                  className: "guard",
                   html: '<div class="inner-div">' + cluster.getChildCount() + '</div>'
               });
           }
       });
-      window["m_" + d] = new L.Icon({
+
+
+  FLAGS = ['guard', 'exit', 'authority'];
+  ICONS = ['guard', 'exit', 'authority', 'exitfast', 'exitstable', 'guardstable', 'guardfast', 'fast', 'stable', 'relay', 'notrunning'];
+  ATTRIBUTES = ['fast','stable'];
+  $.each(ICONS, function(i, d) { 
+      window[d] = new L.Icon({
           iconUrl: "flags/" + d + ".png",
-          iconSize: [25, 30]
+          iconSize: [31, 30]
       });
   });
   
@@ -75,60 +78,79 @@
       map.setView([+20, 0], 2.5);
   }).addTo(mymap);
   
-  var items = [];
-  $.each(FLAGS, function(i, d) {
-      items.push("<label class=\"btn btn-default\" style=\"padding: 5px;\" title=\"Show only " + d + " relays\"><input type=\"checkbox\" onclick=\"markers(\'" + d + "\')\">  " + d.capitalize() + " relays</label>");
-  });
-  document.getElementById('controls').innerHTML += items.join("\n");
   
-  function markers(f) {
-      var myLayer = "l_" + f;
-      var myIcon = "m_" + f;
-      if (f == "custom") {
-          var qsrc = $("#qsrc").val().trim();
-          query = "https://onionoo.torproject.org/details?" + qsrc + "&fields=nickname,platform,observed_bandwidth,latitude,longitude";
-          mymap.removeLayer(window[myLayer]);
-          window[myLayer].clearLayers();
-      } else {
-          var query = "https://onionoo.torproject.org/details?flag=" + f + "&fields=nickname,latitude,longitude,observed_bandwidth,platform";
-      }
-      if (mymap.hasLayer(window[myLayer])) {
-          mymap.removeLayer(window[myLayer]);
-          window[myLayer].clearLayers();
-      } else {
-          $.getJSON(query)
-              .done(function(data) {
-                  document.getElementById('info').innerHTML = ""
-                  document.getElementById('info').innerHTML += "The query returned " + data.relays.length + " relays."
-                  var markerList = [];
-                  $.each(data.relays, function(d, e) {
-                      if (e["latitude"] != null) {
-                          var marker = L.marker([e["latitude"], e["longitude"]], {
-                              icon: window[myIcon]
-                          });
-                          marker.bindPopup(
-                              "<b>Nickname:</b> " + e["nickname"] +
-                              "<br/><b>Platform:</b> " + e["platform"] +
-                              "<br/><b>Observed BW:</b> " + (e["observed_bandwidth"] / (1024 * 8)).toFixed(2) + " Kb/s"
-                          )
-                          markerList.push(marker);
-                      }
-                  });
-                  window[myLayer].addLayers(markerList);
-  
-                  mymap.addLayer(window[myLayer]);
-              })
-              .fail(function() {
-                  document.getElementById('info').innerHTML = ""
-                  document.getElementById('info').innerHTML += "The query failed, please check your syntax."
-              });
-      }
+  function markers(query) {
+      var myIcon = "m_guard"; 
+      query = "https://onionoo.torproject.org/details?search=" + query + "&fields=nickname,platform,observed_bandwidth,latitude,longitude,flags,fingerprint,recommended_version,exit_probability,guard_probability,running";
+        mymap.removeLayer(l_custom);
+        l_custom.clearLayers();
+        $.getJSON(query)
+            .done(function(data) {
+                $('#info').html( "The query returned " + data.relays.length + " relays.");
+                var markerList = [];
+                $.each(data.relays, function(d, e) {
+                    if (e["latitude"] != null) {
+                        marker_string = get_marker(e);
+                         var marker = L.marker([e["latitude"], e["longitude"]], {
+                            icon: window[marker_string]
+                        });
+                        marker.bindPopup(
+                            "<b>Nickname:</b> " + e["nickname"] +
+                            "<br/><b>Platform:</b> " + e["platform"] +
+                            "<br/><b>Observed BW:</b> " + (e["observed_bandwidth"] / (1024 * 8)).toFixed(2) + " Kb/s" +
+                            "<br/><b>Up-to-date:</b> " + e["recommended_version"] +
+                            //"<br/><b>Running:</b> " + e["running"] +
+                            "<br/><b><a href=\"https://atlas.torproject.org/#details/" + e["fingerprint"] + "\">Atlas link</a></b>"
+                        )
+                        markerList.push(marker);
+                    }
+                });
+                l_custom.addLayers(markerList);
+                mymap.addLayer(l_custom);
+            })
+            .fail(function() {
+                $('#info').html("The query failed, please check your syntax.");
+            });
   }
   
   function clear_custom() {
-      mymap.removeLayer(window["l_custom"]);
-      window["l_custom"].clearLayers();
+      mymap.removeLayer(l_custom);
+      l_custom.clearLayers();
   }
+
+  function get_marker(e) {
+    f = e["flags"];
+    var marker_string = "";
+
+    $.each(FLAGS, function(i, flag) {
+       if($.inArray(flag.capitalize(), f) != -1) {
+        marker_string += flag;
+        }
+    });
+    if (marker_string == "guardexit") {
+      if (e["exit_probability"] < e["guard_probablity"]) {
+        marker_string = "guard";}
+      else {
+        marker_string = "exit";}
+    }
+
+    $.each(ATTRIBUTES, function(i, attr) {
+    if($.inArray(attr.capitalize(), f) != -1) {
+       marker_string += attr;
+       return false;
+    }
+    }); 
+
+    if (marker_string == "authoritystable") {
+        marker_string = "authority";}
+    if (e["running"] == false) { 
+      marker_string = "notrunning";}
+    if (marker_string == "") {
+        marker_string = "relay";}
+ return marker_string; 
+ } 
+
+
   </script>
  </body>
 </html>
